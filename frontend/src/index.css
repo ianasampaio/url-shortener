@@ -1,0 +1,38 @@
+:root {
+  --text: #1f2933;
+  --muted: #5f6b7a;
+  --bg: #fff7fa;
+  --surface: #fff;
+  --border: #e8cfda;
+  --accent: #c2185b;
+  --accent-hover: #9e1149;
+  --accent-text: #fff;
+  --accent-soft: #fce4ee;
+  --error: #b42318;
+  --focus: #f79009;
+  /* Bricolage Grotesque em título, botão e link; DM Sans no resto. Carregadas em index.html. */
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+
+  color-scheme: light;
+  font: 16px/1.5 var(--font-body);
+  color: var(--text);
+  background: var(--bg);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
