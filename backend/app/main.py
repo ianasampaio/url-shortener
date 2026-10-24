@@ -1,25 +1,37 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import APIRouter, Depends, FastAPI, Request
+from redis.asyncio import Redis
 
 from app.config import get_settings
 from app.db import create_client, ensure_schema, get_database
-from app.routes import router
+from app.deps import check_origin
+from app.routes import auth, links, redirect
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
     client = create_client(settings)
+    # Short timeouts: when Redis is down, rate limiting is skipped instead of stalling requests.
+    app.state.redis = Redis.from_url(
+        settings.redis_url, socket_timeout=0.5, socket_connect_timeout=0.5
+    )
     app.state.db = get_database(client, settings)
     try:
         await ensure_schema(app.state.db)
         yield
     finally:
+        await app.state.redis.aclose()
         await client.close()
 
 
 app = FastAPI(title="URL Shortener", lifespan=lifespan)
+
+api = APIRouter(prefix="/api", dependencies=[Depends(check_origin)])
+api.include_router(auth.router)
+api.include_router(links.router)
+app.include_router(api)
 
 
 @app.get("/health")
@@ -28,5 +40,5 @@ async def health(request: Request) -> dict[str, str]:
     return {"status": "ok"}
 
 
-# Registered after /health so the catch-all GET /{code} does not shadow it.
-app.include_router(router)
+# Registered last so the catch-all GET /{code} does not shadow /health or /api.
+app.include_router(redirect.router)

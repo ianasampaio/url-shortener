@@ -5,8 +5,25 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+    # Docker's default soft limit is 1024 open files. WiredTiger keeps one file per
+    # collection and index, and the test suite recreates the database on every test,
+    # so mongod aborted with EMFILE. MongoDB recommends 64000.
+    ulimits:
+      nofile:
+        soft: 64000
+        hard: 64000
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 10
