@@ -38,7 +38,7 @@ Novas variáveis, além das da fase 1:
 | `ALLOWED_ORIGINS`  | `http://localhost:5173,http://localhost:8000`  | origens aceitas na checagem de CSRF |
 | `REDIS_URL`        | `redis://localhost:6379/0`                     | rate limit (e fila, na 2.2) |
 
-O `docker-compose.yml` ganha um serviço `redis` (imagem `redis:7`, porta 6379).
+O `docker-compose.yml` ganha um serviço `redis` (imagem `redis:7`, porta 6379). O serviço `mongo` passa a ter limite de 64000 arquivos abertos: o padrão do Docker, 1024, derrubava o `mongod` com `EMFILE` durante os testes, que recriam o banco a cada teste.
 
 ## Modelo de dados
 
@@ -125,7 +125,7 @@ Nas rotas `/api` com método `POST`, `PUT`, `PATCH` ou `DELETE`:
 ```
 
 - `expiresIn`: `"1d" | "7d" | "30d" | "never"`, com padrão `"30d"`.
-- **Resposta `201`**: igual à da fase 1, com `expiresAt` podendo ser `null`.
+- **Resposta `201`**: igual à da fase 1, mais `createdAt` (útil na listagem), e com `expiresAt` podendo ser `null`.
 - **Validação extra da URL**, com resposta `422` no mesmo formato das outras validações:
   - recusa o host igual ao do `BASE_URL`, e os subdomínios dele;
   - recusa hosts da lista de encurtadores: `bit.ly`, `tinyurl.com`, `t.co`, `goo.gl`, `is.gd`, `ow.ly`, `buff.ly`, `cutt.ly`, `rebrand.ly`, `shorturl.at`, e os subdomínios deles.
@@ -184,7 +184,8 @@ backend/
     db.py            # ensure_schema: users, urls (collMod, índices)
     codes.py
     security.py      # hash de senha, JWT, cookie
-    deps.py          # get_db, get_redis, current_user, rate_limit, check_origin
+    deps.py          # get_db, get_redis, current_user, check_origin
+    ratelimit.py     # Limit, enforce_limit, client_ip
     blocklist.py     # domínio próprio + encurtadores
     schemas.py       # + UserCreate, UserOut, LinkPage, expiresIn
     repository.py    # + usuários, ownerId, expiresAt, paginação, exclusões
@@ -234,9 +235,9 @@ Rodam com o Mongo e o Redis do compose. O Redis de testes usa um banco separado 
 
 ## Passos de implementação
 
-1. Redis no compose, novas envs, prefixo `/api` e reorganização das rotas.
-2. Schema: `users`, o novo validator e os índices de `urls`, e o script de migração.
-3. Autenticação: hash, JWT, cookie, `current_user`, CSRF e os endpoints de auth.
-4. Links: `ownerId`, `expiresIn`, blocklist, listagem e exclusão; expiração no redirect.
-5. Rate limit.
-6. README: Redis, envs, migração e riscos aceitos.
+1. ✅ Redis no compose, novas envs, prefixo `/api` e reorganização das rotas.
+2. ✅ Schema: `users`, o novo validator e os índices de `urls`, e o script de migração.
+3. ✅ Autenticação: hash, JWT, cookie, `current_user`, CSRF e os endpoints de auth.
+4. ✅ Links: `ownerId`, `expiresIn`, blocklist, listagem e exclusão; expiração no redirect.
+5. ✅ Rate limit.
+6. ✅ README: Redis, envs, migração e riscos aceitos.
