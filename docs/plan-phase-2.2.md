@@ -46,7 +46,8 @@ O ponto de partida são as perguntas que o relatório responde. Cada pergunta ex
 }
 ```
 
-- **Collection de séries temporais**: `timeField: "timestamp"`, `metaField: "meta"`, `granularity: "minutes"`. O Mongo agrupa os cliques do mesmo link em blocos comprimidos, e as consultas por link e período ficam baratas.
+- **Collection de séries temporais**: `timeField: "timestamp"`, `metaField: "meta"`, `granularity: "hours"`. O Mongo agrupa os cliques do mesmo link em blocos comprimidos, e as consultas por link e período ficam baratas.
+- **Por que `hours`**: a granularidade deve acompanhar o intervalo típico entre cliques **do mesmo link**, que é de horas, não de minutos. Com `hours`, um bloco cobre até 30 dias e junta cliques de várias semanas; com `minutes`, cobriria até 1 dia e um link comum geraria blocos quase vazios, que comprimem mal. Um link viral não é prejudicado, porque o bloco também fecha ao atingir 1000 cliques.
 - **Retenção**: `expireAfterSeconds` de 395 dias (13 meses, o que permite comparar um mês com o mesmo mês do ano anterior), configurável em `CLICKS_RETENTION_DAYS`.
 - **Índices**: `{ "meta.linkId": 1, timestamp: -1 }` para o relatório e `{ "meta.ownerId": 1, timestamp: -1 }` para a exclusão de conta.
 - **Por que `meta` agrupa `linkId` e `ownerId`**: a collection de séries temporais aceita um único campo de metadados. O `ownerId` é copiado do link para que a exclusão de conta não precise passar pela collection `urls`.
@@ -97,7 +98,7 @@ Detalhes:
    - **Prefetch**: `Sec-Purpose` ou `Purpose` contendo `prefetch`, com `botName: "prefetch"`.
    - **Demais crawlers**, por uma biblioteca de detecção (por exemplo `crawlerdetect`), com `botName: "crawler"`.
 2. **User-Agent**: a biblioteca `user-agents` extrai navegador, versão *major*, sistema e dispositivo (`mobile`, `tablet`, `desktop` ou `other`).
-3. **Geo**: `geoip2` com a base GeoLite2 City em `GEOIP_DB_PATH`, gravando o país (ISO) e o estado (código da subdivisão). Se a base não estiver configurada ou o IP não for encontrado, o `geo` é omitido e o worker continua.
+3. **Geo**: `geoip2` com a base GeoLite2 City em `GEOIP_DB_PATH`, gravando o país (ISO) e o estado (código da subdivisão). Se a base não estiver configurada ou o IP não for encontrado, o `geo` é omitido e o worker continua. Em dev isso é o normal: os cliques chegam de `127.0.0.1` ou do IP interno do Docker, que não estão na base.
 4. **`visitorHash`**: `sha256(sal_do_dia + code + ip + userAgent)`.
    - O sal do dia fica no Redis em `salt:{AAAA-MM-DD}`, onde a data é a do evento em UTC. É criado com `SET NX EX 172800` e descartado depois de 48 horas.
    - O hash não serve para seguir a mesma pessoa entre dias nem entre links.
@@ -175,7 +176,13 @@ Os bots vêm de um `$facet` próprio, que não leva o filtro de `isBot`.
 | `CLICKS_RETENTION_DAYS` | `395`    | `expireAfterSeconds` da collection `clicks` |
 | `CLICKS_QUEUE`          | `clicks` | nome da fila do RQ |
 
-**Base GeoLite2**: exige conta gratuita na MaxMind e licença. A base não vai para o repositório (`*.mmdb` no `.gitignore`); o README explica como baixar e recomenda atualizar todo mês.
+**Base GeoLite2**:
+
+- **Download**: exige conta gratuita na MaxMind e uma chave de licença.
+- **Repositório**: a base não vai para o repositório (`*.mmdb` no `.gitignore`).
+- **Atualização**: a licença exige apagar a base em até 30 dias depois de sair uma versão nova. A MaxMind não publica um calendário fixo, então o README explica como atualizar semanalmente com a ferramenta oficial `geoipupdate` (também roda em Docker, `maxmindinc/geoipupdate`), o que cumpre o prazo com folga. O limite é de 30 downloads por dia.
+- **Licença**: o GeoLite é gratuito com conta e permite uso em aplicações para usuários externos, desde que com atribuição. Proíbe usar os dados para identificar uma pessoa, um domicílio ou um endereço, o que não fazemos (só país e estado, sem IP).
+- **Atribuição**: a licença exige o crédito "This product includes GeoLite2 data created by MaxMind, available from https://www.maxmind.com". Vai no README e na tela de relatório do front.
 
 ## Riscos aceitos
 
@@ -232,7 +239,7 @@ Novas dependências: `rq`, `user-agents`, `crawlerdetect`, `geoip2`.
   - sem login → 401;
   - período acima de 400 dias ou `tz` inválido → 422.
 - **Exclusões**: apagar o link apaga os cliques dele; apagar a conta apaga os cliques de todos os links dela.
-- **Schema**: `clicks` é uma collection de séries temporais, com a retenção e os índices esperados.
+- **Schema**: `clicks` é uma collection de séries temporais com granularidade `hours`, com a retenção e os índices esperados.
 
 ## Passos de implementação
 
@@ -241,4 +248,4 @@ Novas dependências: `rq`, `user-agents`, `crawlerdetect`, `geoip2`.
 3. Worker (`process_click`) e fila (`enqueue_click`); captura no redirect com `BackgroundTasks`.
 4. Endpoint de estatísticas e a agregação.
 5. Exclusão de cliques ao apagar link e conta.
-6. README: worker, GeoLite2, novas envs, riscos aceitos.
+6. README: worker, GeoLite2 (download, `geoipupdate` e atribuição), novas envs, riscos aceitos.
