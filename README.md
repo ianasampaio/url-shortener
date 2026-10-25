@@ -1,6 +1,6 @@
 # url-shortener
 
-Encurtador de URLs. Monorepo com a API em FastAPI + MongoDB + Redis ([backend/](backend/)) e o front em React + Vite ([frontend/](frontend/)). Os planos estão em [docs/](docs/): [fase 1](docs/plan-phase-1.md), [fase 2.1](docs/plan-phase-2.1.md) e [fase 2.2](docs/plan-phase-2.2.md).
+Encurtador de URLs. Monorepo com a API em FastAPI + MongoDB + Redis ([backend/](backend/)) e o front em React + Vite ([frontend/](frontend/)). Os planos estão em [docs/](docs/): [fase 1](docs/plan-phase-1.md), [fase 2.1](docs/plan-phase-2.1.md), [fase 2.2](docs/plan-phase-2.2.md) e [front das fases 2.1 e 2.2](docs/plan-frontend-phase-2.md).
 
 ```
 backend/             API (FastAPI, PyMongo async, Redis), gerenciada com uv
