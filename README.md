@@ -1,3 +1,15 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/levo-logo-dark.svg">
+    <img alt="Levo" src="docs/brand/levo-logo-light.svg" width="220">
+  </picture>
+</p>
+
+<p align="center"><strong>Encurte links e acompanhe cada clique.</strong></p>
+
+<!-- Quando o site estiver no ar, troque "em breve" pelo link, ex.: <a href="https://levo.dev.br">levo.dev.br</a> -->
+<p align="center">Site: <em>em breve</em></p>
+
 # url-shortener
 
 **Levo**, encurtador de URLs. Monorepo com a API em FastAPI + MongoDB + Redis ([backend/](backend/)) e o front em React + Vite ([frontend/](frontend/)). Os planos estão em [docs/](docs/): [fase 1](docs/plan-phase-1.md), [fase 2.1](docs/plan-phase-2.1.md), [fase 2.2](docs/plan-phase-2.2.md) e [front das fases 2.1 e 2.2](docs/plan-frontend-phase-2.md).
@@ -5,7 +17,7 @@
 ```
 backend/             API (FastAPI, PyMongo async, Redis), gerenciada com uv
 frontend/            SPA (React, Vite, TypeScript), gerenciada com npm
-docs/                planos
+docs/                planos e identidade visual (docs/brand)
 docker-compose.yml   MongoDB e Redis locais
 ```
 
