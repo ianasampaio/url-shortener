@@ -135,6 +135,7 @@ A resposta traz totais, a série diária (com zero nos dias sem clique) e os 10 
 | `DELETE /api/me` | sim | apaga a conta, os links e os cliques dela |
 | `POST /api/links` | sim | cria um link |
 | `GET /api/links?page=1&pageSize=20` | sim | meus links ativos, do mais novo ao mais antigo |
+| `GET /api/links/{code}` | sim | um link meu (404 se for de outra pessoa ou tiver expirado) |
 | `DELETE /api/links/{code}` | sim | apaga um link meu e os cliques dele (404 se for de outra pessoa) |
 | `GET /api/links/{code}/stats` | sim | relatório de cliques de um link meu |
 | `GET /{code}` | — | redireciona |

@@ -136,6 +136,13 @@ Nas rotas `/api` com método `POST`, `PUT`, `PATCH` ou `DELETE`:
 - `pageSize` vai de 1 a 100.
 - **Resposta**: `{items: [LinkOut], page, pageSize, total}`.
 
+### `GET /api/links/{code}` (requer login)
+
+Acrescentado depois, para o front: a tela de relatório precisa dos dados do link (link curto, destino, criação, expiração) mesmo quando é aberta direto pela URL, sem passar pela listagem.
+
+- `200` com o `LinkOut`, igual ao de `POST` e da listagem.
+- `404` se o link não existe, **é de outra pessoa** ou já expirou, como no relatório. Usa a mesma checagem que `GET /api/links/{code}/stats`.
+
 ### `DELETE /api/links/{code}` (requer login)
 
 - `204` se o link é do usuário.

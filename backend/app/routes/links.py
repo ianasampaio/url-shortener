@@ -96,6 +96,25 @@ async def delete_my_link(code: str, user: CurrentUser, db: DbDep) -> Response:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+async def get_own_active_link(db: DbDep, code: str, user: dict[str, Any]) -> dict[str, Any]:
+    doc = await find_link(db, code)
+    expires_at = doc.get("expiresAt") if doc else None
+    # Someone else's link, or an expired one, is a 404 like a missing code, so the response
+    # never confirms that a code exists.
+    if (
+        doc is None
+        or doc["ownerId"] != user["_id"]
+        or (expires_at is not None and expires_at <= datetime.now(UTC))
+    ):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Link not found")
+    return doc
+
+
+@router.get("/links/{code}", response_model=LinkOut)
+async def get_my_link(code: str, user: CurrentUser, db: DbDep, settings: SettingsDep) -> LinkOut:
+    return to_link_out(await get_own_active_link(db, code, user), settings)
+
+
 @router.get("/links/{code}/stats", response_model=StatsOut)
 async def get_link_stats(
     code: str,
@@ -103,13 +122,5 @@ async def get_link_stats(
     user: CurrentUser,
     db: DbDep,
 ) -> StatsOut:
-    doc = await find_link(db, code)
-    expires_at = doc.get("expiresAt") if doc else None
-    # Someone else's link, or an expired one, is a 404 like a missing code.
-    if (
-        doc is None
-        or doc["ownerId"] != user["_id"]
-        or (expires_at is not None and expires_at <= datetime.now(UTC))
-    ):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Link not found")
+    await get_own_active_link(db, code, user)
     return await link_stats(db, code, query)

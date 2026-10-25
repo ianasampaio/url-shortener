@@ -230,3 +230,42 @@ def test_cannot_delete_someone_elses_link(make_client, mongo):
 
 def test_delete_unknown_link_returns_404(user_client):
     assert user_client.delete("/api/links/ZZZZZZZ").status_code == 404
+
+
+def test_get_own_link(user_client):
+    created = user_client.post(
+        "/api/links", json={"url": "https://exemplo.com/", "expiresIn": "never"}
+    ).json()
+
+    response = user_client.get(f"/api/links/{created['code']}")
+
+    assert response.status_code == 200
+    assert response.json() == created
+
+
+def test_get_link_requires_login(user_client, client):
+    code = user_client.post("/api/links", json={"url": "https://exemplo.com/"}).json()["code"]
+
+    assert client.get(f"/api/links/{code}").status_code == 401
+
+
+def test_get_someone_elses_link_is_404(make_client):
+    owner = make_client("iana@exemplo.com")
+    code = owner.post("/api/links", json={"url": "https://exemplo.com/"}).json()["code"]
+    intruder = make_client("outra@exemplo.com")
+
+    response = intruder.get(f"/api/links/{code}")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Link not found"}
+
+
+def test_get_unknown_link_is_404(user_client):
+    assert user_client.get("/api/links/ZZZZZZZ").status_code == 404
+
+
+def test_get_expired_link_is_404(user_client, mongo):
+    owner_id = ObjectId(user_client.get("/api/me").json()["id"])
+    _seed_link(mongo, "EXPIRED", ownerId=owner_id, expiresAt=datetime.now(UTC) - timedelta(1))
+
+    assert user_client.get("/api/links/EXPIRED").status_code == 404
