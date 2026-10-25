@@ -23,7 +23,7 @@ O ponto de partida são as perguntas que o relatório responde. Cada pergunta ex
 | De onde vieram? | `referer` | cabeçalho `Referer`, só o domínio |
 | Em que idioma? | `language` | primeira opção do `Accept-Language` |
 | Quantas pessoas diferentes? | `visitorHash` | hash do IP e do User-Agent com um sal diário |
-| É gente ou robô? | `isBot`, `botName` | User-Agent e cabeçalhos de prefetch |
+| É gente ou robô? | `isBot`, `botName` | User-Agent |
 
 ## Modelo de dados
 
@@ -68,10 +68,18 @@ O ponto de partida são as perguntas que o relatório responde. Cada pergunta ex
 
 1. O `GET /{code}` encontra o link válido e monta o evento cru:
    ```python
-   {"code", "ownerId", "timestamp", "ip", "userAgent", "referer", "acceptLanguage", "secPurpose"}
+   {"code", "ownerId", "timestamp", "ip", "userAgent", "referer", "acceptLanguage"}
    ```
 2. Responde `302`. A publicação do evento é agendada como `BackgroundTasks` do FastAPI, que roda **depois** de a resposta ser enviada, então o redirect não espera pela fila.
-3. A tarefa em segundo plano chama `queue.enqueue("app.worker.process_click", event, ...)`.
+3. A tarefa em segundo plano chama `queue.enqueue_call("app.worker.process_click", ...)`, com a descrição `click on {code}`. A descrição padrão do RQ repetiria os argumentos, IP incluído, nos logs e no registro de jobs que falharam.
+
+### Prefetch e prerender: recusados
+
+O navegador às vezes carrega um link **antes** do clique, para abrir mais rápido: as *speculation rules* do Chrome (pedidas pela página onde o link está) ou a previsão do próprio navegador. Ele avisa com `Sec-Purpose: prefetch` (ou `prefetch;prerender`; `Purpose` é o nome antigo do cabeçalho).
+
+- **O problema**: se a pessoa clica depois, o navegador reaproveita a cópia pré-carregada (o Chrome a guarda por 5 minutos) e o clique **não chega ao servidor**. Contar a pré-carga como clique infla os números com quem nunca clicou; não contar perde os cliques reais.
+- **A solução**: o redirect responde `503` com `Cache-Control: no-store` a qualquer requisição especulativa, sem consultar o banco nem publicar na fila. Um status fora da faixa 2xx é o meio que a MDN e a documentação do Chrome indicam para o servidor recusar carregamento especulativo: nada é guardado, e se a pessoa clicar, o clique chega como uma requisição normal e é contado.
+- **O custo**: a pessoa perde a aceleração da pré-carga, que num redirect é pequena, porque o lento é a página de destino.
 
 Detalhes:
 
@@ -94,10 +102,9 @@ Detalhes:
 **O que `process_click(event)` faz**:
 
 1. **Bots**:
-   - **Pré-visualizações**, por lista explícita de User-Agents, com o nome gravado em `botName`: `WhatsApp`, `Slackbot-LinkExpanding`, `facebookexternalhit`, `Twitterbot`, `TelegramBot`, `Discordbot`, `LinkedInBot`.
-   - **Prefetch**: `Sec-Purpose` ou `Purpose` contendo `prefetch`, com `botName: "prefetch"`.
-   - **Demais crawlers**, por uma biblioteca de detecção (por exemplo `crawlerdetect`), com `botName: "crawler"`.
-2. **User-Agent**: a biblioteca `user-agents` extrai navegador, versão *major*, sistema e dispositivo (`mobile`, `tablet`, `desktop` ou `other`).
+   - **Pré-visualizações**, por lista explícita de User-Agents conferida em ordem, com o nome gravado em `botName`: `WhatsApp`, `Slackbot-LinkExpanding`, `facebookexternalhit`, `TelegramBot`, `Twitterbot`, `Discordbot`, `LinkedInBot`. O Telegram vem antes do Twitter porque o User-Agent dele é `TelegramBot (like TwitterBot)`.
+   - **Demais crawlers**, pelo `crawlerdetect` (que inclui `curl` e afins), com `botName: "crawler"`. User-Agent vazio também conta como crawler, porque navegador real sempre envia um.
+2. **User-Agent**: a biblioteca `user-agents` extrai navegador, versão *major*, sistema e dispositivo (`mobile`, `tablet`, `desktop` ou `other`). A palavra "Mobile" sai do nome do navegador ("Chrome Mobile" vira "Chrome", "Mobile Safari" vira "Safari"), porque o dispositivo já é um campo próprio e o ranking não deve separar o mesmo navegador em dois.
 3. **Geo**: `geoip2` com a base GeoLite2 City em `GEOIP_DB_PATH`, gravando o país (ISO) e o estado (código da subdivisão). Se a base não estiver configurada ou o IP não for encontrado, o `geo` é omitido e o worker continua. Em dev isso é o normal: os cliques chegam de `127.0.0.1` ou do IP interno do Docker, que não estão na base.
 4. **`visitorHash`**: `sha256(sal_do_dia + code + ip + userAgent)`.
    - O sal do dia fica no Redis em `salt:{AAAA-MM-DD}`, onde a data é a do evento em UTC. É criado com `SET NX EX 172800` e descartado depois de 48 horas.
@@ -199,10 +206,10 @@ Estes itens entram no README, somados aos da 2.1.
 ```
 backend/
   app/
-    queue.py          # cliente Redis síncrono, Queue do RQ, enqueue_click
+    click_queue.py    # cliente Redis síncrono, Queue do RQ, build_event, enqueue_click
     worker.py         # process_click e os clientes do worker
     analytics/
-      bots.py         # lista de pré-visualizações, prefetch, crawlerdetect
+      bots.py         # lista de pré-visualizações, crawlerdetect
       useragent.py    # navegador, sistema, dispositivo
       geo.py          # leitor GeoLite2
       visitor.py      # sal diário e visitorHash
@@ -219,7 +226,7 @@ Novas dependências: `rq`, `user-agents`, `crawlerdetect`, `geoip2`.
 ## Testes
 
 - **Unidade, sem banco**:
-  - pré-visualizações (WhatsApp, Slack…), prefetch e crawler genérico detectados com o `botName` certo;
+  - pré-visualizações (WhatsApp, Slack…) e crawler genérico detectados com o `botName` certo;
   - User-Agents reais de Chrome Android, Safari iOS e Firefox desktop com navegador, sistema e dispositivo corretos;
   - referer reduzido ao domínio (`https://www.instagram.com/p/x?y=1` → `instagram.com`), e vazio omitido;
   - `Accept-Language: pt-BR,pt;q=0.9,en;q=0.8` → `pt-BR`;
@@ -229,6 +236,7 @@ Novas dependências: `rq`, `user-agents`, `crawlerdetect`, `geoip2`.
   - o clique gravado **não tem IP**;
   - o `clickCount` sobe para humano e não sobe para bot.
 - **Integração**: com a `Queue(is_async=False)`, o job roda na hora, então um `GET /{code}` gera um clique gravado.
+- **Prefetch**: `Sec-Purpose: prefetch`, `prefetch;prerender` e `Purpose: prefetch` → 503 com `no-store`, sem `Location` e sem clique gravado; a requisição normal seguinte é contada.
 - **Redis inacessível**: o redirect continua respondendo 302.
 - **Relatório**:
   - com cliques inseridos direto no banco, a série diária vem com zeros nos dias vazios;
@@ -243,9 +251,9 @@ Novas dependências: `rq`, `user-agents`, `crawlerdetect`, `geoip2`.
 
 ## Passos de implementação
 
-1. Collection `clicks`, `clickCount` no validator de `urls`, novas envs.
-2. Módulos de `analytics/` com os testes de unidade.
-3. Worker (`process_click`) e fila (`enqueue_click`); captura no redirect com `BackgroundTasks`.
-4. Endpoint de estatísticas e a agregação.
-5. Exclusão de cliques ao apagar link e conta.
-6. README: worker, GeoLite2 (download, `geoipupdate` e atribuição), novas envs, riscos aceitos.
+1. ✅ Collection `clicks`, `clickCount` no validator de `urls`, novas envs.
+2. ✅ Módulos de `analytics/` com os testes de unidade.
+3. ✅ Worker (`process_click`) e fila (`enqueue_click`); captura no redirect com `BackgroundTasks`.
+4. ✅ Endpoint de estatísticas e a agregação.
+5. ✅ Exclusão de cliques ao apagar link e conta.
+6. ✅ README: worker, GeoLite2 (download, `geoipupdate` e atribuição), novas envs, riscos aceitos.
