@@ -1,0 +1,224 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.input,
+.select {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.875rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  transition:
+    border-color 0.15s var(--ease),
+    box-shadow 0.15s var(--ease),
+    background-color 0.15s var(--ease);
+}
+
+.input::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.input:hover {
+  border-color: var(--border-strong);
+}
+
+/* Anel largo e translúcido no foco, no lugar de só trocar a cor da borda. */
+.input:focus-visible {
+  outline: none;
+  background: var(--surface);
+  border-color: var(--accent-fg);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--error);
+  box-shadow: 0 0 0 4px var(--error-soft);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--error);
+}
+
+.button,
+.buttonSecondary,
+.buttonDanger,
+.buttonGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  /* Tamanho único para todos os botões com texto (o mesmo dos campos). */
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  font: 600 0.875rem var(--font-display);
+  white-space: nowrap;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition:
+    transform 0.15s var(--ease),
+    box-shadow 0.15s var(--ease),
+    background-color 0.15s var(--ease),
+    color 0.15s var(--ease);
+}
+
+.button {
+  color: var(--accent-text);
+  background: var(--accent-gradient);
+  box-shadow:
+    var(--highlight),
+    0 1px 2px rgb(0 0 0 / 10%),
+    0 4px 12px -2px var(--ring);
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    var(--highlight),
+    0 2px 4px rgb(0 0 0 / 10%),
+    0 8px 20px -4px var(--ring);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Secundário: fundo tingido, sem contorno. */
+.buttonSecondary {
+  color: var(--accent-fg);
+  background: var(--accent-soft);
+}
+
+.buttonSecondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-fg) 18%, transparent);
+}
+
+.buttonDanger {
+  color: #fff;
+  background: var(--error);
+  box-shadow: var(--highlight);
+}
+
+.buttonDanger:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+/* Ação destrutiva fora de uma confirmação: tingida, no padrão do botão secundário. */
+.buttonDangerSoft {
+  composes: buttonSecondary;
+  color: var(--error);
+  background: var(--error-soft);
+}
+
+.buttonDangerSoft:hover:not(:disabled) {
+  color: var(--error);
+  background: color-mix(in srgb, var(--error) 18%, transparent);
+}
+
+.buttonGhost {
+  color: var(--text);
+  background: transparent;
+}
+
+.buttonGhost:hover {
+  background: var(--surface-sunken);
+}
+
+.button:disabled,
+.buttonSecondary:disabled,
+.buttonDanger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Botão só com ícone: o texto vai no aria-label e no title. */
+.iconButton,
+.iconButtonDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition:
+    background-color 0.15s var(--ease),
+    color 0.15s var(--ease);
+}
+
+.iconButton:hover {
+  color: var(--accent-fg);
+  background: var(--accent-soft);
+}
+
+.iconButtonDanger:hover {
+  color: var(--error);
+  background: var(--error-soft);
+}
+
+.card {
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.backLink {
+  display: inline-flex;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--accent-fg);
+}
+
+.status {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--muted);
+}

@@ -1,0 +1,200 @@
+.main {
+  position: relative;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 4.5rem 1rem 4rem;
+  overflow: hidden;
+}
+
+/* Manchas de cor extras atrás do título, só na Home. */
+.main::before {
+  content: '';
+  position: absolute;
+  inset: -4rem 10% auto;
+  height: 26rem;
+  z-index: -1;
+  background:
+    radial-gradient(closest-side, var(--glow-1), transparent),
+    radial-gradient(closest-side at 70% 60%, var(--glow-2), transparent);
+  filter: blur(40px);
+}
+
+.hero {
+  max-width: 44rem;
+  margin: 0 auto 3.5rem;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent-fg);
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent-fg) 20%, transparent);
+  border-radius: var(--radius-pill);
+}
+
+.title {
+  margin: 0 0 1rem;
+  font: 700 3.25rem/1.05 var(--font-display);
+  letter-spacing: -0.035em;
+  /* Distribui as linhas por igual, sem deixar uma palavra sozinha no fim. */
+  text-wrap: balance;
+}
+
+/* "cada clique" com o gradiente da marca. */
+.titleAccent {
+  background: linear-gradient(90deg, var(--accent-fg), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitle {
+  margin: 0 auto 2rem;
+  max-width: 34rem;
+  font-size: 1.125rem;
+  color: var(--muted);
+}
+
+/* Formulário de vidro sobre as manchas de cor. */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  text-align: left;
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  /* 8px de espaçamento + 12px do botão = 20px, o raio dos cartões. */
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-lg);
+}
+
+.row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.row input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border-color: transparent;
+}
+
+.row input:hover {
+  border-color: transparent;
+}
+
+.formError {
+  padding: 0 0.5rem 0.25rem;
+}
+
+.benefits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Zoom leve ao passar o mouse (desligado com prefers-reduced-motion, em index.css). */
+.benefitCard {
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.benefitCard:hover {
+  transform: scale(1.03);
+  box-shadow: var(--shadow-lg);
+}
+
+.benefitIcon {
+  display: inline-flex;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  color: var(--accent-fg);
+  background: var(--accent-soft);
+  border-radius: var(--radius-control);
+}
+
+.benefitTitle {
+  margin: 0 0 0.375rem;
+  font: 600 1.0625rem var(--font-display);
+}
+
+.benefitText {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.modalText {
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
+.modalList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9375rem;
+}
+
+.modalList li {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+}
+
+.modalCheck {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--accent-fg);
+}
+
+.modalActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modalActions a {
+  justify-content: center;
+}
+
+@media (max-width: 30rem) {
+  /* No celular o botão do cabeçalho mostra só "Cadastre-se", sem quebrar em duas linhas;
+     o restante continua no texto para leitores de tela. */
+  .longLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .main {
+    padding-top: 3rem;
+  }
+
+  .title {
+    font-size: 2.25rem;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+}

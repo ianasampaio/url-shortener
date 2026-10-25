@@ -1,0 +1,66 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 3.5rem 1rem;
+}
+
+.brand {
+  display: inline-flex;
+  margin-bottom: 2rem;
+  border-radius: var(--radius-sm);
+}
+
+.logo {
+  height: 2.75rem;
+}
+
+/* Cartão de vidro sobre as manchas de cor do fundo. */
+.card {
+  width: 100%;
+  max-width: 24rem;
+  padding: 2rem;
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-lg);
+}
+
+.title {
+  margin: 0 0 1.5rem;
+  font: 700 1.625rem/1.15 var(--font-display);
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form button[type='submit'] {
+  margin-top: 0.25rem;
+}
+
+.notice {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--accent-fg);
+  background: var(--accent-soft);
+  border-radius: var(--radius-control);
+}
+
+.switch {
+  margin: 1.5rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.switch a {
+  font-weight: 600;
+}

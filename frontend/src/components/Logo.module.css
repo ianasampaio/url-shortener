@@ -1,0 +1,7 @@
+.logo {
+  display: block;
+  /* As letras ocupam ~60% da altura: o resto é o espaço da trilha acima delas. */
+  height: 2.5rem;
+  width: auto;
+  color: var(--text);
+}

@@ -4,3 +4,5 @@ __pycache__/
 .ruff_cache/
 .env
 *.mmdb
+# Base GeoLite2 e arquivos do geoipupdate: a licença proíbe redistribuir.
+backend/geoip/

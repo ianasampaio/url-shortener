@@ -1,0 +1,233 @@
+.header {
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  margin: 0;
+  font: 700 1.875rem/1.15 var(--font-display);
+}
+
+.subtitle {
+  margin: 0.375rem 0 0;
+  color: var(--muted);
+}
+
+/* Formulário de criação num cartão próprio, acima da lista. */
+.form {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: end;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+}
+
+.form .urlField {
+  min-width: 0;
+}
+
+.formMessages {
+  grid-column: 1 / -1;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+}
+
+/* Rede de segurança: se a tabela não couber, rola dentro do cartão em vez de vazar. */
+.tableWrap {
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table th {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Divisórias quase invisíveis entre as linhas, e destaque suave da linha sob o mouse. */
+.table tbody tr + tr td {
+  border-top: 1px solid var(--border);
+}
+
+.table tbody tr {
+  transition: background-color 0.15s var(--ease);
+}
+
+.table tbody tr:hover {
+  background: var(--accent-softer);
+}
+
+/* O link recém-criado: faixa magenta na esquerda. */
+.highlight {
+  background: var(--accent-softer);
+}
+
+.highlight td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent-fg);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.short {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font: 600 0.9375rem var(--font-display);
+}
+
+.short a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.short a:hover {
+  color: var(--accent-fg);
+  text-decoration: underline;
+}
+
+/* A coluna do destino fica com o espaço que sobrar (max-width: 0 + width: 100% deixa a
+   célula encolher), e o texto é cortado com reticências: a tabela sempre cabe. */
+.destinationCell {
+  width: 100%;
+  max-width: 0;
+}
+
+.destination {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9375rem;
+}
+
+.created {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.validity {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* Faltando menos de 24 horas: etiqueta em vez de só texto vermelho. */
+.soon {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--error);
+  background: var(--error-soft);
+  border-radius: var(--radius-pill);
+}
+
+.number {
+  font: 600 0.9375rem var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  gap: 0.125rem;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+/* Com mouse, as ações ficam discretas até a linha receber hover ou foco. */
+@media (hover: hover) {
+  .actions {
+    opacity: 0.55;
+    transition: opacity 0.15s var(--ease);
+  }
+
+  .table tbody tr:hover .actions,
+  .table tbody tr:focus-within .actions {
+    opacity: 1;
+  }
+}
+
+/* Celular: cada linha vira um cartão, com o nome da coluna antes do valor. */
+@media (max-width: 48rem) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+  }
+
+  .table tbody tr {
+    padding: 0.75rem 0;
+  }
+
+  .table tbody tr + tr td {
+    border-top: 0;
+  }
+
+  .table tbody tr + tr {
+    border-top: 1px solid var(--border);
+  }
+
+  .table td {
+    padding: 0.25rem 1rem;
+  }
+
+  .table td[data-label]::before {
+    content: attr(data-label) ': ';
+    /* O rótulo não herda a fonte da célula (ex.: o número de cliques, em fonte de título). */
+    font: 400 0.8125rem var(--font-body);
+    color: var(--muted);
+  }
+
+  .destinationCell {
+    width: auto;
+    max-width: none;
+  }
+
+  .nowrap {
+    white-space: normal;
+  }
+
+  .actions {
+    justify-content: flex-start;
+    padding-top: 0.25rem;
+    opacity: 1;
+  }
+}

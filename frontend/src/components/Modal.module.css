@@ -1,0 +1,57 @@
+.dialog {
+  max-width: 30rem;
+  width: calc(100% - 2rem);
+  padding: 1.5rem;
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-lg);
+}
+
+.dialog[open] {
+  animation: enter 0.2s var(--ease);
+}
+
+/* Fundo escurecido e desfocado atrás do modal. */
+.dialog::backdrop {
+  background: rgb(14 12 17 / 40%);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  margin: 0;
+  font: 600 1.25rem/1.3 var(--font-display);
+}
+
+.close {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 0.25rem;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.close:hover {
+  color: var(--text);
+  background: var(--surface-sunken);
+}
