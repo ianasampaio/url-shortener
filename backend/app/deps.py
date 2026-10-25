@@ -4,6 +4,7 @@ from bson import ObjectId
 from fastapi import Depends, HTTPException, Request, status
 from pymongo.asynchronous.database import AsyncDatabase
 from redis.asyncio import Redis
+from rq import Queue
 
 from app.config import Settings, get_settings
 from app.repository import find_user_by_id
@@ -20,9 +21,14 @@ def get_redis(request: Request) -> Redis:
     return request.app.state.redis
 
 
+def get_click_queue(request: Request) -> Queue:
+    return request.app.state.click_queue
+
+
 DbDep = Annotated[AsyncDatabase, Depends(get_db)]
 RedisDep = Annotated[Redis, Depends(get_redis)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
+ClickQueueDep = Annotated[Queue, Depends(get_click_queue)]
 
 
 async def current_user(request: Request, db: DbDep, settings: SettingsDep) -> dict[str, Any]:

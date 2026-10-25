@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pymongo import MongoClient
 from redis import Redis
+from rq import Queue
 
 # Forced (not setdefault) so the suite never runs against the dev database or Redis.
 os.environ["MONGO_DB"] = "url_shortener_test"
@@ -13,8 +14,10 @@ os.environ["REDIS_URL"] = "redis://localhost:6379/15"
 os.environ["JWT_SECRET"] = "test-secret-with-at-least-32-characters"
 # TestClient talks plain http://, where a Secure cookie would never be sent back.
 os.environ["COOKIE_SECURE"] = "false"
+os.environ["GEOIP_DB_PATH"] = ""
 
 from app.config import get_settings  # noqa: E402
+from app.deps import get_click_queue  # noqa: E402
 from app.main import app  # noqa: E402
 
 PASSWORD = "correct horse battery"
@@ -101,3 +104,11 @@ def client(make_client):
 @pytest.fixture
 def user_client(make_client):
     return make_client("iana@exemplo.com")
+
+
+@pytest.fixture
+def inline_clicks(make_client, redis):
+    """Run click jobs synchronously, so a redirect stores its click before returning."""
+    queue = Queue("clicks", connection=redis, is_async=False)
+    app.dependency_overrides[get_click_queue] = lambda: queue
+    return queue

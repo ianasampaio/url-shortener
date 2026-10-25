@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, Depends, FastAPI, Request
 from redis.asyncio import Redis
 
+from app.click_queue import create_queue
 from app.config import get_settings
 from app.db import create_client, ensure_schema, get_database
 from app.deps import check_origin
@@ -17,11 +18,13 @@ async def lifespan(app: FastAPI):
     app.state.redis = Redis.from_url(
         settings.redis_url, socket_timeout=0.5, socket_connect_timeout=0.5
     )
+    app.state.click_queue = create_queue(settings)
     app.state.db = get_database(client, settings)
     try:
-        await ensure_schema(app.state.db)
+        await ensure_schema(app.state.db, settings)
         yield
     finally:
+        app.state.click_queue.connection.close()
         await app.state.redis.aclose()
         await client.close()
 

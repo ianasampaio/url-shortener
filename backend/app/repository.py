@@ -7,7 +7,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 
 from app.codes import generate_code
-from app.db import URLS_COLLECTION, USERS_COLLECTION
+from app.db import CLICKS_COLLECTION, URLS_COLLECTION, USERS_COLLECTION
 
 MAX_INSERT_ATTEMPTS = 5
 
@@ -81,7 +81,10 @@ async def list_links(
 
 async def delete_link(db: AsyncDatabase, code: str, owner_id: ObjectId) -> bool:
     result = await db[URLS_COLLECTION].delete_one({"_id": code, "ownerId": owner_id})
-    return result.deleted_count == 1
+    if result.deleted_count == 0:
+        return False
+    await db[CLICKS_COLLECTION].delete_many({"meta.linkId": code})
+    return True
 
 
 async def create_user(db: AsyncDatabase, email: str, password_hash: str) -> dict[str, Any]:
@@ -102,6 +105,8 @@ async def find_user_by_id(db: AsyncDatabase, user_id: ObjectId) -> dict[str, Any
 
 
 async def delete_user(db: AsyncDatabase, user_id: ObjectId) -> None:
-    # Links first: if this stops halfway, the user still exists and can retry.
+    # User last: if this stops halfway, the user still exists and can retry.
     await db[URLS_COLLECTION].delete_many({"ownerId": user_id})
+    # Clicks carry the owner, so they go without looking up the (already deleted) links.
+    await db[CLICKS_COLLECTION].delete_many({"meta.ownerId": user_id})
     await db[USERS_COLLECTION].delete_one({"_id": user_id})

@@ -8,6 +8,10 @@ from app.config import Settings
 
 URLS_COLLECTION = "urls"
 USERS_COLLECTION = "users"
+CLICKS_COLLECTION = "clicks"
+
+# hours: clicks on one link usually arrive hours apart, so a bucket spans up to 30 days.
+CLICKS_TIMESERIES = {"timeField": "timestamp", "metaField": "meta", "granularity": "hours"}
 
 # Phase 1 expired every link 30 days after createdAt; replaced by the expiresAt TTL.
 LEGACY_TTL_INDEX = "createdAt_1"
@@ -26,6 +30,7 @@ URLS_VALIDATOR = {
             "ownerId": {"bsonType": "objectId"},
             "createdAt": {"bsonType": "date"},
             "expiresAt": {"bsonType": "date", "description": "absent = never expires"},
+            "clickCount": {"bsonType": ["int", "long"], "description": "human clicks only"},
         },
     }
 }
@@ -68,7 +73,28 @@ async def _ensure_collection(
         await db.command("collMod", name, validator=validator)
 
 
-async def ensure_schema(db: AsyncDatabase) -> None:
+async def _ensure_clicks_collection(
+    db: AsyncDatabase, existing: list[str], retention_seconds: int
+) -> None:
+    if CLICKS_COLLECTION in existing:
+        # Keep retention in sync with CLICKS_RETENTION_DAYS.
+        await db.command("collMod", CLICKS_COLLECTION, expireAfterSeconds=retention_seconds)
+    else:
+        try:
+            await db.create_collection(
+                CLICKS_COLLECTION,
+                timeseries=CLICKS_TIMESERIES,
+                expireAfterSeconds=retention_seconds,
+            )
+        except CollectionInvalid:
+            pass
+
+    clicks = db[CLICKS_COLLECTION]
+    await clicks.create_index([("meta.linkId", ASCENDING), ("timestamp", DESCENDING)])
+    await clicks.create_index([("meta.ownerId", ASCENDING), ("timestamp", DESCENDING)])
+
+
+async def ensure_schema(db: AsyncDatabase, settings: Settings) -> None:
     existing = await db.list_collection_names()
     await _ensure_collection(db, existing, URLS_COLLECTION, URLS_VALIDATOR)
     await _ensure_collection(db, existing, USERS_COLLECTION, USERS_VALIDATOR)
@@ -81,3 +107,5 @@ async def ensure_schema(db: AsyncDatabase) -> None:
     await urls.create_index([("ownerId", ASCENDING), ("createdAt", DESCENDING)])
 
     await db[USERS_COLLECTION].create_index([("email", ASCENDING)], unique=True)
+
+    await _ensure_clicks_collection(db, existing, settings.clicks_retention_days * 24 * 60 * 60)

@@ -23,6 +23,11 @@ class Settings(BaseSettings):
         "http://localhost:8000",
     ]
 
+    # Click analytics (phase 2.2).
+    geoip_db_path: str = ""
+    clicks_retention_days: int = Field(default=395, ge=1)
+    clicks_queue: str = "clicks"
+
     @field_validator("allowed_origins", mode="before")
     @classmethod
     def split_origins(cls, value: object) -> object:

@@ -93,3 +93,22 @@ def test_migration_deletes_only_ownerless_links(client, mongo):
 
     assert delete_ownerless_links(mongo, apply=True) == 1
     assert [d["_id"] for d in mongo.urls.find()] == ["WITHOWN"]
+
+
+def test_clicks_is_a_time_series_collection(client, mongo):
+    options = mongo.get_collection("clicks").options()
+
+    assert options["timeseries"]["timeField"] == "timestamp"
+    assert options["timeseries"]["metaField"] == "meta"
+    assert options["timeseries"]["granularity"] == "hours"
+    assert options["expireAfterSeconds"] == 395 * 24 * 60 * 60
+    keys = [index["key"] for index in mongo.clicks.list_indexes()]
+    assert {"meta.linkId": 1, "timestamp": -1} in keys
+    assert {"meta.ownerId": 1, "timestamp": -1} in keys
+
+
+def test_urls_validator_accepts_click_count(client, mongo):
+    mongo.urls.insert_one(_link(clickCount=3))
+
+    with pytest.raises(WriteError):
+        mongo.urls.insert_one(_link(_id="other12", clickCount="três"))

@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
@@ -6,8 +7,15 @@ from app.blocklist import is_blocked_host
 from app.config import Settings
 from app.deps import CurrentUser, DbDep, RedisDep, SettingsDep
 from app.ratelimit import Limit, enforce_limit
-from app.repository import CodeSpaceExhaustedError, delete_link, insert_link, list_links
-from app.schemas import EXPIRATION, LinkCreate, LinkOut, LinkPage
+from app.repository import (
+    CodeSpaceExhaustedError,
+    delete_link,
+    find_link,
+    insert_link,
+    list_links,
+)
+from app.schemas import EXPIRATION, LinkCreate, LinkOut, LinkPage, StatsOut, StatsQuery
+from app.stats import link_stats
 
 router = APIRouter(tags=["links"])
 
@@ -21,6 +29,7 @@ def to_link_out(doc: dict[str, Any], settings: Settings) -> LinkOut:
         original_url=doc["originalUrl"],
         created_at=doc["createdAt"],
         expires_at=doc.get("expiresAt"),
+        click_count=doc.get("clickCount", 0),
     )
 
 
@@ -85,3 +94,22 @@ async def delete_my_link(code: str, user: CurrentUser, db: DbDep) -> Response:
     if not await delete_link(db, code, user["_id"]):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Link not found")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/links/{code}/stats", response_model=StatsOut)
+async def get_link_stats(
+    code: str,
+    query: Annotated[StatsQuery, Query()],
+    user: CurrentUser,
+    db: DbDep,
+) -> StatsOut:
+    doc = await find_link(db, code)
+    expires_at = doc.get("expiresAt") if doc else None
+    # Someone else's link, or an expired one, is a 404 like a missing code.
+    if (
+        doc is None
+        or doc["ownerId"] != user["_id"]
+        or (expires_at is not None and expires_at <= datetime.now(UTC))
+    ):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Link not found")
+    return await link_stats(db, code, query)
