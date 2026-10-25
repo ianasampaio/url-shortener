@@ -187,7 +187,7 @@ Os bots vêm de um `$facet` próprio, que não leva o filtro de `isBot`.
 
 - **Download**: exige conta gratuita na MaxMind e uma chave de licença.
 - **Repositório**: a base não vai para o repositório (`*.mmdb` no `.gitignore`).
-- **Atualização**: a licença exige apagar a base em até 30 dias depois de sair uma versão nova. A MaxMind não publica um calendário fixo, então o README explica como atualizar semanalmente com a ferramenta oficial `geoipupdate` (também roda em Docker, `maxmindinc/geoipupdate`), o que cumpre o prazo com folga. O limite é de 30 downloads por dia.
+- **Atualização**: a licença exige apagar a base em até 30 dias depois de sair uma versão nova. A MaxMind não publica um calendário fixo, então o guia [docs/geolite.md](geolite.md) explica como atualizar semanalmente com a ferramenta oficial `geoipupdate` (também roda em Docker, `maxmindinc/geoipupdate`), o que cumpre o prazo com folga. O limite é de 30 downloads por dia.
 - **Licença**: o GeoLite é gratuito com conta e permite uso em aplicações para usuários externos, desde que com atribuição. Proíbe usar os dados para identificar uma pessoa, um domicílio ou um endereço, o que não fazemos (só país e estado, sem IP).
 - **Reinício do worker**: o worker abre a base uma vez, quando sobe. O `geoipupdate` grava um arquivo novo e o troca de lugar com o antigo, e o worker segue lendo a versão antiga até ser reiniciado. Por isso, cada atualização precisa vir seguida de um reinício do worker.
 - **Divulgação**: a licença proíbe repassar a base a terceiros sem autorização da MaxMind. Ela não vai para o repositório, nem para uma imagem Docker pública; num servidor, é baixada lá mesmo.
@@ -195,7 +195,7 @@ Os bots vêm de um `$facet` próprio, que não leva o filtro de `isBot`.
 
 ## Riscos aceitos
 
-Estes itens entram no README, somados aos da 2.1.
+Somam-se aos da 2.1; o README remete aos planos.
 
 - **Com o Redis fora do ar**, os cliques do período se perdem, mas os redirects continuam funcionando.
 - **Um clique pode ser contado duas vezes** se o worker cair no meio do processamento.

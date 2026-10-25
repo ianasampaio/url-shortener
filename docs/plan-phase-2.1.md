@@ -169,7 +169,7 @@ Acrescentado depois, para o front: a tela de relatório precisa dos dados do lin
 
 ## Riscos aceitos
 
-Esta seção vai para o README.
+A lista completa fica aqui; o README resume a proteção contra abuso e remete aos planos.
 
 - **Links não são checados contra listas de URLs maliciosas** (Safe Browsing ou Web Risk), e não há denúncia nem moderação. A mitigação é login obrigatório, rate limit por conta e por IP, e recusa de outros encurtadores.
 - **Sem verificação de e-mail**, criar contas em massa só é freado pelo rate limit de cadastro por IP.
