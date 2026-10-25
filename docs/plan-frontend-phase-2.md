@@ -26,7 +26,7 @@ Fora do escopo: deploy e configuração de produção, painel somando todos os l
 
 | Caminho | Tela | Acesso |
 |---|---|---|
-| `/` | redireciona para `/app/links` | — |
+| `/` | Home pública: campo de URL e convite para criar conta | só deslogado; logado vai para `/app/links` |
 | `/app/login` | login | só deslogado; logado vai para `/app/links` |
 | `/app/signup` | cadastro | só deslogado |
 | `/app/links` | meus links, com o formulário de criação | logado |
@@ -56,7 +56,7 @@ O link curto (`shortUrl`) aponta direto para a API (`http://localhost:8000/aB3xK
 
 ### Tipos gerados
 
-- Script `npm run gen:api`: `openapi-typescript http://localhost:8000/openapi.json -o src/api/schema.d.ts`, com a API de pé.
+- Script `npm run gen:api`: `openapi-typescript http://localhost:8000/openapi.json -o src/api/schema.d.ts`, com a API de pé. O `openapi-typescript` ainda não declara suporte ao TypeScript 6, que o projeto usa, então o script o executa isolado via `npx`, com o TypeScript 5 dele, em vez de instalá-lo como dependência. O arquivo gerado é só declaração de tipos, e o TypeScript 6 o lê normalmente.
 - O arquivo gerado **vai para o repositório**, para o front compilar sem a API rodando. Quando o backend muda, roda-se o script de novo, e o diff mostra o que mudou no contrato.
 - Os tipos são usados como `components["schemas"]["LinkOut"]`, reexportados com nomes curtos em `src/api/types.ts`.
 
@@ -104,6 +104,16 @@ Mutações:
 
 ## Telas
 
+### Home
+
+Página pública em `/`, com a mesma identidade visual e o mesmo cabeçalho do painel.
+
+- **Cabeçalho**: marca à esquerda; à direita, "Entrar" e "Cadastre-se gratuitamente". No celular, o botão mostra só "Cadastre-se"; o "gratuitamente" continua no nome acessível.
+- **Campo de URL** com o botão "Encurtar URL". A validação básica (vazio, sem `http(s)://`) acontece ali mesmo.
+- **Encurtar exige conta**: o botão abre um modal que convida a criar conta ou entrar, com os benefícios (links num só lugar, relatório de cliques, validade à escolha). Nada é enviado à API.
+- **A URL não se perde**: os botões do modal levam a `/app/signup?next=…` e `/app/login?next=…`, com `next=/app/links?url=<a URL digitada>`. Depois de entrar, o painel abre com o campo preenchido, e o `?url=` sai da barra de endereço.
+- Abaixo do formulário, os mesmos três benefícios em cartões.
+
 ### Login e cadastro
 
 - E-mail e senha, com `label` visível. O cadastro valida no cliente o formato do e-mail e o tamanho da senha (8 a 128), mas a validação que vale é a da API.
@@ -113,14 +123,15 @@ Mutações:
 
 ### Layout de quem está logado
 
-- Cabeçalho com o nome do app, o e-mail do usuário e a navegação: "Meus links", "Conta", "Sair".
-- O conteúdo das telas abaixo.
+- O painel de links é a página inicial de quem está logado, então o cabeçalho não tem "Meus links": só a marca (que leva ao painel) e o **ícone de perfil**.
+- **Menu de perfil**: abre ao passar o mouse ou ao clicar. Mostra "Conectado como" com o e-mail, "Minha conta" (a tela de conta, onde fica a exclusão) e "Sair". Fecha com Esc (devolvendo o foco ao ícone), com clique fora ou ao sair dele pelo teclado. Quando o hover abre o menu, o clique que costuma vir logo depois não o fecha.
+- **Sair** e **excluir a conta** levam à Home.
 
 ### Meus links
 
 **Formulário de criação**, no topo:
 
-- campo de URL e escolha de expiração (1 dia, 7 dias, 30 dias, nunca; padrão 30 dias);
+- campo de URL e **Validade** (1 dia, 7 dias, 30 dias, sem validade; padrão 30 dias), numa lista suspensa própria, com o visual do app (o menu do `<select>` nativo não aceita estilo). Segue o padrão de listbox do ARIA: setas, Home/End, Enter/Espaço escolhem, Esc fecha, e a opção atual aparece marcada;
 - depois de criar, o link novo aparece destacado no topo da lista, com o botão de copiar focado;
 - erros perto do campo, ligados a ele por `aria-describedby`.
 
@@ -128,11 +139,10 @@ Mutações:
 
 - **Colunas**:
   - link curto, com botão de copiar e confirmação "Copiado!";
-  - destino truncado, com o endereço completo no `title`;
-  - criação;
-  - expiração relativa ("expira em 3 dias", "nunca expira"), destacada quando falta menos de 24 horas;
+  - destino truncado, com o endereço completo no `title` e a data de criação numa linha discreta abaixo (como coluna própria, a tabela não cabia com as ações);
+  - validade relativa ("expira em 3 dias", "nunca expira"), destacada quando falta menos de 24 horas;
   - cliques (`clickCount`);
-  - ações: "Relatório" e "Apagar".
+  - ações como ícones (gráfico para o relatório, lixeira para apagar), com o nome no `aria-label` ("Relatório de localhost:8000/aB3xK9q") e uma dica no `title`.
 - **Apagar**: pede confirmação num `<dialog>` nativo, avisando que os cliques também serão apagados.
 - **Paginação**: 20 por página, com "anterior", "próxima" e "página X de Y".
 - **Lista vazia**: um convite para criar o primeiro link.
@@ -188,13 +198,27 @@ Mutações:
 - sem cliques no período: o link pronto para copiar e a frase "Os cliques aparecem aqui alguns segundos depois de acontecerem.";
 - `404`: tela própria.
 
-**Rodapé**, obrigatório pela licença: "This product includes GeoLite2 data created by MaxMind, available from https://www.maxmind.com".
+**Rodapé**, obrigatório pela licença: "This product includes GeoLite Data created by MaxMind, available from https://www.maxmind.com".
 
 ### Conta
 
-- E-mail e data de criação.
-- "Sair".
-- "Excluir conta": um `<dialog>` explica que os links e os cliques serão apagados de forma permanente. Depois da exclusão, o cache é limpo e a pessoa vai para o cadastro.
+- Link "← Meus links" no topo.
+- Cartão com o e-mail, a data de criação e "Sair".
+- **Exclusão numa área separada**, com borda avermelhada, explicação e o botão "Excluir conta" (vermelho tingido). A confirmação num `<dialog>` explica que os links e os cliques serão apagados de forma permanente. Depois da exclusão, o cache é limpo e a pessoa vai para a Home.
+
+## Visual e temas
+
+- **Tema claro e escuro**: começa pela preferência do sistema (`prefers-color-scheme`), e o ícone de sol/lua no cabeçalho alterna entre os dois. A escolha fica no `localStorage` e em `data-theme` no `<html>`. Um script no `index.html` a aplica antes de a página desenhar, para não piscar no tema errado. O magenta continua sendo a cor da marca. No escuro, o magenta usado como texto (`--accent-fg`) fica mais claro, para manter o contraste.
+- **Tokens em `index.css`**: as telas usam só variáveis. Superfícies em camadas: fundo, cartão (`--surface`) e elementos flutuantes (`--surface-raised`). Bordas translúcidas, sombras em camadas e um anel de foco translúcido.
+- **Cantos por função**: `--radius-xs` (6 px, dicas), `--radius-sm` (8 px, itens dentro de menus, listas e do controle de período), `--radius-control` (12 px, botões, campos, seletor, botões de ícone), `--radius-popover` (14 px, menus e listas suspensas), `--radius-card` (20 px, cartões, modal, tabela e painéis de vidro) e `--radius-pill` (etiquetas). Em elementos aninhados, o raio de fora é o de dentro mais o espaçamento, para os cantos ficarem concêntricos. Nenhum canto usa valor solto.
+- **Transparência só no que flutua**: cabeçalho fixo, menu de perfil, lista de validade, formulário da Home e cartão de login, com `backdrop-filter`. Quem pede menos transparência no sistema (`prefers-reduced-transparency`), ou usa navegador sem `backdrop-filter`, recebe superfícies sólidas.
+- **Fundo**: duas manchas de cor desfocadas no topo (magenta e um violeta de apoio).
+- **Home**: etiqueta, título com gradiente em "cada clique" e uma miniatura fiel do relatório (`ReportPreview`), com o cabeçalho do link, os atalhos de período, os três indicadores, o gráfico diário e os rankings de países e origem. Os dados de exemplo somam o mesmo total nas barras e nos rankings. O gráfico é em CSS, para a Home não carregar o Recharts, e os rankings reaproveitam o componente real. A miniatura é decorativa (`aria-hidden`).
+- **Botões**: um tamanho único para todos os botões com texto (40 px de altura, o mesmo dos campos), inclusive no cabeçalho. Os botões só de ícone mostram uma dica ao passar o mouse ou focar pelo teclado (`data-tooltip`), como "Relatório" e "Excluir" na lista.
+- **Marca Levo**: segue [docs/brand/levo-logo.html](brand/levo-logo.html). O logotipo em traço, com a trilha pontilhada do "l" ao "o", é o componente `Logo` (cores dos tokens, então acompanha o tema). O ícone da proposta virou o `favicon.svg`. A fonte é a Outfit, e o violeta da trilha é o token `--violet`.
+- **Marca e crédito**: o nome do site (`SITE_NAME`) e o crédito do rodapé ficam em `src/site.ts`. O rodapé fica centralizado e aparece só nas páginas iniciais (Home e Meus links): "Encurtador · feito por Iana Sampaio · GitHub", com o nome levando ao perfil e "GitHub" ao repositório. Trocar a marca é mudar uma linha ali, e mais o `<title>` do `index.html`.
+- **Movimento**: transições de 150 a 200 ms, e menus e modais surgindo com leve aumento de escala. Tudo desligado com `prefers-reduced-motion`.
+- **Gráfico**: as cores vêm de variáveis via `style` e CSS, porque atributos SVG não resolvem `var()` e as cores não acompanhariam o tema.
 
 ## Formatação
 
@@ -249,7 +273,9 @@ frontend/src/
     api.ts                 # mock de fetch por rota
 ```
 
-Novas dependências: `react-router`, `@tanstack/react-query`, `recharts`; em desenvolvimento, `openapi-typescript`.
+Novas dependências: `react-router`, `@tanstack/react-query`, `recharts`. O `openapi-typescript` roda via `npx` no `gen:api`, sem entrar no `package.json`.
+
+O relatório é carregado sob demanda (`lazy` do React Router): o Recharts, a maior dependência, só é baixado quando alguém abre um relatório.
 
 ## Testes
 
@@ -279,13 +305,13 @@ Vitest e Testing Library, com o `fetch` mockado por rota e um `QueryClient` novo
 
 ## Passos de implementação
 
-1. Dependências, proxy `/api` no Vite, `gen:api` e o `schema.d.ts` gerado.
-2. `client.ts`, `errors.ts`, `hooks.ts` e a infraestrutura de testes (`render.tsx`, mock de `fetch`).
-3. Rotas, guarda de sessão, layout, login e cadastro.
-4. Meus links: formulário, lista, cópia, exclusão e paginação.
-5. Relatório: cabeçalho, período, indicadores, gráfico, rankings, compartilhamentos e atribuição.
-6. Conta: sair e excluir.
-7. README: seção do front atualizada (o aviso de que o front é o da fase 1 sai) e o `gen:api`.
+1. ✅ Dependências, proxy `/api` no Vite, `gen:api` e o `schema.d.ts` gerado.
+2. ✅ `client.ts`, `errors.ts`, `hooks.ts` e a infraestrutura de testes (`render.tsx`, mock de `fetch`).
+3. ✅ Rotas, guarda de sessão, layout, login e cadastro.
+4. ✅ Meus links: formulário, lista, cópia, exclusão e paginação.
+5. ✅ Relatório: cabeçalho, período, indicadores, gráfico, rankings, compartilhamentos e atribuição.
+6. ✅ Conta: sair e excluir.
+7. ✅ README: seção do front atualizada (o aviso de que o front é o da fase 1 sai) e o `gen:api`.
 
 ## Para quando houver deploy
 

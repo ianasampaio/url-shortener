@@ -1,6 +1,6 @@
 # url-shortener
 
-Encurtador de URLs. Monorepo com a API em FastAPI + MongoDB + Redis ([backend/](backend/)) e o front em React + Vite ([frontend/](frontend/)). Os planos estão em [docs/](docs/): [fase 1](docs/plan-phase-1.md), [fase 2.1](docs/plan-phase-2.1.md), [fase 2.2](docs/plan-phase-2.2.md) e [front das fases 2.1 e 2.2](docs/plan-frontend-phase-2.md).
+**Levo**, encurtador de URLs. Monorepo com a API em FastAPI + MongoDB + Redis ([backend/](backend/)) e o front em React + Vite ([frontend/](frontend/)). Os planos estão em [docs/](docs/): [fase 1](docs/plan-phase-1.md), [fase 2.1](docs/plan-phase-2.1.md), [fase 2.2](docs/plan-phase-2.2.md) e [front das fases 2.1 e 2.2](docs/plan-frontend-phase-2.md).
 
 ```
 backend/             API (FastAPI, PyMongo async, Redis), gerenciada com uv
@@ -43,7 +43,18 @@ npm install
 npm run dev   # http://localhost:5173
 ```
 
-> O front ainda é o da fase 1: chama `POST /links` sem login e não funciona com a API da fase 2.1, que usa `/api/links` e exige login. Ele será atualizado à parte.
+Em dev, o Vite encaminha `/api` para a API em `http://localhost:8000`: o front chama caminhos relativos, o cookie de sessão funciona pelo proxy e a API não precisa de CORS. A Home pública fica em `/`, e as demais telas sob `/app` (`/app/login`, `/app/signup`, `/app/links`, `/app/links/:code`, `/app/account`).
+
+O tema começa pela preferência do sistema e pode ser trocado no ícone de sol/lua do cabeçalho. A identidade visual (logotipo, ícone e cores) segue a proposta em [docs/brand/levo-logo.html](docs/brand/levo-logo.html).
+
+Os tipos da API vêm do OpenAPI do backend. Quando o contrato mudar, com a API de pé:
+
+```bash
+cd frontend
+npm run gen:api   # regrava src/api/schema.d.ts, que vai para o repositório
+```
+
+O gerador (`openapi-typescript`) roda isolado via `npx`, com o TypeScript 5 dele: a versão atual ainda não declara suporte ao TypeScript 6 do projeto.
 
 - Health check: `GET http://localhost:8000/health`
 - OpenAPI: http://localhost:8000/docs
@@ -63,9 +74,16 @@ País e estado dos cliques vêm da base gratuita GeoLite2 City, da MaxMind, cons
      -e GEOIPUPDATE_EDITION_IDS=GeoLite2-City \
      maxmindinc/geoipupdate
    ```
-3. Aponte o worker para a base no `backend/.env`: `GEOIP_DB_PATH=geoip/GeoLite2-City.mmdb`. Arquivos `.mmdb` não vão para o repositório.
+3. Aponte o worker para a base no `backend/.env`: `GEOIP_DB_PATH=geoip/GeoLite2-City.mmdb`.
+4. **Reinicie o worker depois de cada atualização.** Ele abre a base uma vez, quando sobe, e segue lendo a versão antiga até ser reiniciado.
 
-This product includes GeoLite2 data created by MaxMind, available from https://www.maxmind.com.
+A licença também exige:
+
+- **não repassar a base a terceiros**: além de não ir para o repositório (`*.mmdb` está no `.gitignore`), ela não pode ir dentro de uma imagem Docker pública nem ficar acessível por URL. Num servidor, baixe-a lá mesmo com o `geoipupdate`;
+- **apagar as versões antigas** em até 30 dias depois de cada versão nova, inclusive cópias em backups;
+- **não usar os dados para localizar uma pessoa, um domicílio ou um endereço**: o projeto grava só país e estado, sem o IP.
+
+This product includes GeoLite Data created by MaxMind, available from https://www.maxmind.com.
 
 ### Atualizando um banco da fase 1
 

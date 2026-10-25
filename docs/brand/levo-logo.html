@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Levo — proposta de logo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #c2185b;
+    --accent-gradient: linear-gradient(180deg, #d0256a, #c2185b);
+    --accent-fg: #c2185b;
+    --accent-text: #ffffff;
+    --accent-soft: rgba(194, 24, 91, 0.08);
+    --violet: #8b5cf6;
+    --text: #1c1622;
+    --muted: #6b6474;
+    --bg: #faf8fb;
+    --surface: #ffffff;
+    --border: rgba(28, 22, 34, 0.08);
+    --glow-1: rgba(194, 24, 91, 0.12);
+    --glow-2: rgba(124, 58, 237, 0.09);
+    --shadow-md: 0 8px 24px rgba(28, 22, 34, 0.08);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --accent: #d81b60;
+      --accent-gradient: linear-gradient(180deg, #e33a7c, #d81b60);
+      --accent-fg: #f472a6;
+      --accent-soft: rgba(244, 114, 166, 0.14);
+      --text: #f3eef5;
+      --muted: #a59cad;
+      --bg: #0e0c11;
+      --surface: #17141b;
+      --border: rgba(255, 255, 255, 0.08);
+      --glow-1: rgba(216, 27, 96, 0.22);
+      --glow-2: rgba(124, 58, 237, 0.18);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    font-family: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 48px 24px 64px;
+    background:
+      radial-gradient(600px 400px at 15% 0%, var(--glow-1), transparent 70%),
+      radial-gradient(500px 380px at 90% 10%, var(--glow-2), transparent 70%),
+      var(--bg);
+  }
+  main { max-width: 960px; margin: 0 auto; display: grid; gap: 24px; }
+  h1 { font-weight: 600; font-size: 1.6rem; margin: 0 0 4px; }
+  p { margin: 0; color: var(--muted); line-height: 1.5; max-width: 60ch; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    border-radius: 20px;
+  }
+  .hero { padding: 64px 32px; display: grid; place-items: center; }
+  .hero svg { width: min(420px, 100%); height: auto; color: var(--text); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+  .tile {
+    border-radius: 20px;
+    padding: 40px 24px;
+    display: grid;
+    place-items: center;
+    gap: 16px;
+    min-height: 240px;
+  }
+  .tile svg { height: auto; }
+  /* Versão em fundo magenta: tudo em branco, trilha mais suave */
+  .on-accent {
+    background: var(--accent-gradient);
+    color: var(--accent-text);
+    --dest: #ffffff;
+    --trail-paint: rgba(255, 255, 255, 0.75);
+  }
+  .on-accent svg { width: min(240px, 100%); color: var(--accent-text); }
+  .on-soft { background: var(--accent-soft); }
+  /*
+   * Cartões com tema fixo, para ver as duas versões lado a lado qualquer que seja o tema do
+   * sistema. Cada um usa um gradiente próprio (#trail-light, #trail-dark), com cores fixas:
+   * o #trail segue o tema da página.
+   */
+  .theme-light {
+    background: #ffffff;
+    color: #1c1622;
+    border: 1px solid rgba(28, 22, 34, 0.08);
+    --dest: #c2185b;
+    --trail-paint: url(#trail-light);
+  }
+  .theme-dark {
+    background: #17141b;
+    color: #f3eef5;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    --dest: #f472a6;
+    --trail-paint: url(#trail-dark);
+  }
+  .theme-light svg, .theme-dark svg { width: min(260px, 100%); }
+  .theme-light .caption { color: #6b6474; }
+  .theme-dark .caption { color: #a59cad; }
+  .icon { width: 120px; }
+  .link {
+    font-size: 1.15rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 18px;
+    border-radius: 12px;
+    color: var(--text);
+  }
+  .link b { color: var(--accent-fg); font-weight: 600; }
+  .caption { font-size: 0.95rem; text-align: center; }
+  .on-soft .caption { color: var(--muted); }
+  .palette { display: grid; gap: 12px; }
+  .palette h2 { margin: 0; font-size: 0.95rem; font-weight: 600; }
+  .swatches { display: flex; gap: 12px; flex-wrap: wrap; }
+  .sw { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--muted); }
+  .sw i { width: 28px; height: 28px; border-radius: 8px; display: block; border: 1px solid var(--border); }
+  /*
+   * Cores padrão do logo, herdadas pelo <use>. A trilha usa o gradiente #trail.
+   * Atenção: o gradiente lê variáveis do lugar onde é declarado (o SVG escondido), e não
+   * de onde é usado. Por isso as paradas usam --violet e --accent-fg, definidas em :root,
+   * e cada versão troca a pintura inteira da trilha por --trail-paint.
+   */
+  .logo { --dest: var(--accent-fg); --trail-paint: url(#trail); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Levo</h1>
+    <p>A trilha pontilhada sai do “l” e leva até o “o” em magenta, que é o destino. O violeta no começo da trilha conversa com o gradiente do título da Home.</p>
+  </header>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="trail" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" style="stop-color: var(--violet)"/>
+        <stop offset="1" style="stop-color: var(--accent-fg)"/>
+      </linearGradient>
+      <linearGradient id="trail-light" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#8b5cf6"/>
+        <stop offset="1" stop-color="#c2185b"/>
+      </linearGradient>
+      <linearGradient id="trail-dark" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#8b5cf6"/>
+        <stop offset="1" stop-color="#f472a6"/>
+      </linearGradient>
+      <g id="letters" fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 2 V100" stroke="currentColor"/>
+        <path d="M30 70 H90 A30 30 0 1 0 83 89.3" stroke="currentColor"/>
+        <path d="M110 40 L135 100 L160 40" stroke="currentColor"/>
+        <circle cx="205" cy="70" r="30" style="stroke: var(--dest)"/>
+        <path d="M10 -14 Q107 -74 196 26" style="stroke: var(--trail-paint)" stroke-width="6" stroke-dasharray="0 14"/>
+      </g>
+    </defs>
+  </svg>
+
+  <!-- Logo principal -->
+  <section class="card hero">
+    <svg class="logo" viewBox="-20 -50 270 170" role="img" aria-label="Logo Levo"><use href="#letters"/></svg>
+  </section>
+
+  <!-- As duas versões lado a lado, com tema fixo -->
+  <div class="grid">
+    <section class="tile theme-light">
+      <svg viewBox="-20 -50 270 170" role="img" aria-label="Logo Levo no tema claro"><use href="#letters"/></svg>
+      <span class="caption">Tema claro</span>
+    </section>
+    <section class="tile theme-dark">
+      <svg viewBox="-20 -50 270 170" role="img" aria-label="Logo Levo no tema escuro"><use href="#letters"/></svg>
+      <span class="caption">Tema escuro</span>
+    </section>
+  </div>
+
+  <div class="grid">
+    <!-- Versão em fundo magenta -->
+    <section class="tile on-accent">
+      <svg viewBox="-20 -50 270 170" role="img" aria-label="Logo Levo em fundo magenta"><use href="#letters"/></svg>
+      <span class="caption">Versão em fundo de cor</span>
+    </section>
+
+    <!-- Ícone -->
+    <section class="tile on-soft">
+      <svg class="icon" viewBox="0 0 120 120" role="img" aria-label="Ícone do Levo">
+        <defs>
+          <linearGradient id="iconbg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#d0256a"/>
+            <stop offset="1" stop-color="#c2185b"/>
+          </linearGradient>
+        </defs>
+        <rect width="120" height="120" rx="28" fill="url(#iconbg)"/>
+        <path d="M34 34 V88" stroke="#ffffff" stroke-width="12" stroke-linecap="round" fill="none"/>
+        <path d="M34 22 Q62 4 80 50" stroke="#ffffff" stroke-opacity="0.75" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 11" fill="none"/>
+        <circle cx="80" cy="72" r="16" stroke="#ffffff" stroke-width="10" fill="none"/>
+      </svg>
+      <span class="caption">Ícone para app e favicon</span>
+    </section>
+
+    <!-- Uso no link -->
+    <section class="tile on-soft">
+      <span class="link"><b>levo.dev.br</b>/x7k</span>
+      <span class="caption">Como o nome aparece em cada link</span>
+    </section>
+  </div>
+
+  <section class="palette">
+    <h2>Tema claro</h2>
+    <div class="swatches">
+      <span class="sw"><i style="background:#c2185b"></i>Magenta #c2185b</span>
+      <span class="sw"><i style="background:#8b5cf6"></i>Violeta #8b5cf6</span>
+      <span class="sw"><i style="background:#1c1622"></i>Texto #1c1622</span>
+      <span class="sw"><i style="background:#faf8fb"></i>Fundo #faf8fb</span>
+      <span class="sw"><i style="background:#ffffff"></i>Cartão #ffffff</span>
+    </div>
+    <h2>Tema escuro</h2>
+    <div class="swatches">
+      <span class="sw"><i style="background:#d81b60"></i>Magenta (botões) #d81b60</span>
+      <span class="sw"><i style="background:#f472a6"></i>Magenta (texto e logo) #f472a6</span>
+      <span class="sw"><i style="background:#8b5cf6"></i>Violeta #8b5cf6</span>
+      <span class="sw"><i style="background:#f3eef5"></i>Texto #f3eef5</span>
+      <span class="sw"><i style="background:#0e0c11"></i>Fundo #0e0c11</span>
+      <span class="sw"><i style="background:#17141b"></i>Cartão #17141b</span>
+    </div>
+  </section>
+</main>
+</body>
+</html>
